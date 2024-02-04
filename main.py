@@ -1,12 +1,14 @@
+
 import time 
 import board 
 import digitalio
-
+import analogio
 import usb_midi
 import adafruit_midi
 
 from adafruit_midi.note_on import NoteOn
 from adafruit_midi.note_off import NoteOff
+from adafruit_midi.pitch_bend import PitchBend
 
 octave_active = False
 
@@ -28,6 +30,9 @@ inputs = [digitalio.DigitalInOut(board.GP0),
           digitalio.DigitalInOut(board.GP7),
           digitalio.DigitalInOut(board.GP8),
           digitalio.DigitalInOut(board.GP9)]
+
+pots = [analogio.AnalogIn(board.A0), analogio.AnalogIn(board.A1)]
+ribbon = analogio.AnalogIn(board.A2)
 
 for pin in inputs:
     pin.direction = digitalio.Direction.INPUT
@@ -51,7 +56,6 @@ for pin in outputs:
     pin.value = True
 
 while True:
-    result = ""
     for current_output in range(num_outputs):
         outputs[current_output].value = False
         for current_input in range(num_inputs):
@@ -74,6 +78,10 @@ while True:
             midi.send(NoteOn(96 + (octave_active * 12), 127))
         else:
             midi.send(NoteOff(96 + (octave_active * 12), 127))
+    
+    pot_val =  15175 - ((pots[0].value + pots[1].value)//8)
+    pot_val = ribbon.value // 3
+    midi.send(PitchBend(pot_val))
     #print(result)
     #time.sleep(0.1)
 # import board
